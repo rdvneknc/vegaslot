@@ -20,13 +20,34 @@ const ads = readdirSync(adsDir)
 rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
 
+process.on('uncaughtException', (err) => {
+  console.error(`\n✗ build failed: ${err.message}`);
+  process.exit(err.status || 1);
+});
+
+console.log(`node ${process.version} · ads: ${ads.join(', ') || '(none)'}`);
 const built = [];
 for (const ad of ads) {
   const dir = path.join(adsDir, ad);
   console.log(`\n▶ ${ad}`);
-  const install = existsSync(path.join(dir, 'package-lock.json')) ? 'npm ci' : 'npm install';
-  if (!existsSync(path.join(dir, 'node_modules'))) execSync(install, { cwd: dir, stdio: 'inherit' });
-  execSync('npm run build', { cwd: dir, stdio: 'inherit' });
+  // Build tools (vite, plugins) are devDependencies. Vercel builds with NODE_ENV=production,
+  // which makes npm skip them — so install with --include=dev and a non-production env.
+  const env = { ...process.env, NODE_ENV: 'development' };
+  const run = (cmd) => {
+    console.log(`$ ${cmd}`);
+    execSync(cmd, { cwd: dir, stdio: 'inherit', env });
+  };
+  if (!existsSync(path.join(dir, 'node_modules', '.bin', 'vite'))) {
+    const flags = '--include=dev --no-audit --no-fund';
+    try {
+      run(existsSync(path.join(dir, 'package-lock.json')) ? `npm ci ${flags}` : `npm install ${flags}`);
+    } catch {
+      // A lockfile made on Windows can miss Linux-only optional packages; retry without it.
+      console.warn(`${ad}: npm ci failed, retrying with npm install`);
+      run(`npm install ${flags}`);
+    }
+  }
+  execSync('npm run build', { cwd: dir, stdio: 'inherit', env: { ...process.env, NODE_ENV: 'production' } });
 
   const html = path.join(dir, 'dist', 'index.html');
   if (!existsSync(html)) throw new Error(`${ad}: dist/index.html not found`);
