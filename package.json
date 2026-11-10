@@ -1,0 +1,11 @@
+{
+  "name": "vegaslot-playables",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-all.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

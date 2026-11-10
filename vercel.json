@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "echo \"each ad installs its own deps\"",
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "trailingSlash": true
+}
