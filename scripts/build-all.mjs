@@ -32,7 +32,9 @@ for (const ad of ads) {
   console.log(`\n▶ ${ad}`);
   // Build tools (vite, plugins) are devDependencies. Vercel builds with NODE_ENV=production,
   // which makes npm skip them — so install with --include=dev and a non-production env.
-  const env = { ...process.env, NODE_ENV: 'development' };
+  // Workspace installs hoist tools to the repo root, so put both .bin folders on PATH.
+  const PATH = [path.join(dir, 'node_modules', '.bin'), path.join(root, 'node_modules', '.bin'), process.env.PATH].join(path.delimiter);
+  const env = { ...process.env, PATH, NODE_ENV: 'development' };
   const run = (cmd) => {
     console.log(`$ ${cmd}`);
     execSync(cmd, { cwd: dir, stdio: 'inherit', env });
@@ -49,7 +51,7 @@ for (const ad of ads) {
       run(`npm install ${flags}`);
     }
   }
-  execSync('npm run build', { cwd: dir, stdio: 'inherit', env: { ...process.env, NODE_ENV: 'production' } });
+  execSync('npm run build', { cwd: dir, stdio: 'inherit', env: { ...env, NODE_ENV: 'production' } });
 
   const html = path.join(dir, 'dist', 'index.html');
   if (!existsSync(html)) throw new Error(`${ad}: dist/index.html not found`);
