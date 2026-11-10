@@ -2,6 +2,9 @@
   "name": "vegaslot-playables",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "ads/*"
+  ],
   "scripts": {
     "build": "node scripts/build-all.mjs"
   },

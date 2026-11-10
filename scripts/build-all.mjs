@@ -37,7 +37,9 @@ for (const ad of ads) {
     console.log(`$ ${cmd}`);
     execSync(cmd, { cwd: dir, stdio: 'inherit', env });
   };
-  if (!existsSync(path.join(dir, 'node_modules', '.bin', 'vite'))) {
+  // With npm workspaces the root install already provides vite (hoisted to ./node_modules).
+  const hasVite = [dir, root].some((d) => existsSync(path.join(d, 'node_modules', '.bin', 'vite')));
+  if (!hasVite) {
     const flags = '--include=dev --no-audit --no-fund';
     try {
       run(existsSync(path.join(dir, 'package-lock.json')) ? `npm ci ${flags}` : `npm install ${flags}`);
